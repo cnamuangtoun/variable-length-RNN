@@ -4,31 +4,44 @@ import torch.nn.functional as F
 
 
 class Model(nn.Module):
-    def __init__(self, input_size):
+    def __init__(self):
         super(Model, self).__init__()
-        self.bnorm = nn.BatchNorm1d(input_size)
-        self.lin_a = nn.Linear(input_size, input_size)
+        emb_dim = 300
+        hidden_size = 100
 
-        emb_dim = 50
-        self.emb = nn.Embedding(8000, emb_dim, padding_idx=0)
-        self.rnn = nn.GRU(emb_dim, input_size, batch_first=True)
+        self.emb = nn.Embedding(1000, 100, padding_idx=0)
 
-        self.drop = nn.Dropout(p=0.2)
-        self.lin_o = nn.Linear(input_size * 2, 2)
+        self.projection = nn.Linear(hidden_size, hidden_size)
+        self.rnn = nn.LSTM(hidden_size, hidden_size,
+            num_layers=2, bidirectional = True, batch_first = True,
+            dropout = 0.0)
 
-    def forward(self, x, xt):
-        x = self.bnorm(x)
-        if type(xt) == nn.utils.rnn.PackedSequence:
-            xt = nn.utils.rnn.PackedSequence(
-                data=self.emb(xt.data), batch_sizes=xt.batch_sizes,
-                sorted_indices=None, unsorted_indices=None)
-        elif torch.is_tensor(xt):
-            xt = self.emb(xt)
-        else:
-            print("Incorrect Input Type")
-        h = self.rnn(xt)[1].squeeze(0)
+        self.lin_1 = nn.Linear(hidden_size * 2 * 2, hidden_size)
+        self.lin_2 = nn.Linear(hidden_size, hidden_size)
+        self.lin_3 = nn.Linear(3, hidden_size)
 
-        x = F.relu(torch.cat((self.lin_a(x), h), dim=1))
-        x = self.drop(x)
+    def forward(self, x_hyp, x_pre):
 
-        return F.log_softmax(self.lin_o(x), dim=1)
+        pre_embed = self.emb(x_pre)
+        hyp_embed = self.emb(x_hyp)
+
+        _, (pre_ht, _) = self.rnn(pre_embed)
+        _, (hyp_ht, _) = self.rnn(hyp_embed)
+
+        x_out = F.relu(self.lin_1(torch.cat((pre_ht, hyp_ht), dim=1).squeeze()))
+        x_out = F.relu(self.lin_2(x_out))
+
+        return F.log_softmax(self.lin_3(x_out), dim=1)
+
+
+        # if type(xt) == nn.utils.rnn.PackedSequence:
+        #     xt = nn.utils.rnn.PackedSequence(
+        #         data=self.emb(xt.data), batch_sizes=xt.batch_sizes,
+        #         sorted_indices=None, unsorted_indices=None)
+        #
+        # elif torch.is_tensor(xt):
+        #     xt = self.emb(xt)
+        # else:
+
+
+test_model = Model()
