@@ -34,14 +34,4 @@ class Model(nn.Module):
         return F.log_softmax(self.lin_3(x_out), dim=1)
 
 
-        # if type(xt) == nn.utils.rnn.PackedSequence:
-        #     xt = nn.utils.rnn.PackedSequence(
-        #         data=self.emb(xt.data), batch_sizes=xt.batch_sizes,
-        #         sorted_indices=None, unsorted_indices=None)
-        #
-        # elif torch.is_tensor(xt):
-        #     xt = self.emb(xt)
-        # else:
-
-
 test_model = Model()
