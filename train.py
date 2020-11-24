@@ -3,9 +3,9 @@ import json
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .dataset import make_x_y
-from .metrics import accuracy
-from .model import Model
+from variable_length_RNN.dataset import make_x_y
+from variable_length_RNN.metrics import accuracy
+from variable_length_RNN.model import Model
 
 
 
