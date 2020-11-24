@@ -32,6 +32,3 @@ class Model(nn.Module):
         x_out = F.relu(self.lin_2(x_out))
 
         return F.log_softmax(self.lin_3(x_out), dim=1)
-
-
-test_model = Model()
